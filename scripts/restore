@@ -1,25 +1,34 @@
 #!/bin/bash
 
-source ../settings/scripts/_common.sh 2>/dev/null || source _common.sh
+source ../settings/scripts/_common.sh
 source /usr/share/yunohost/helpers
 
 ynh_script_progression "Restoring the app directory..."
-ynh_restore_everything
+ynh_restore "$install_dir"
+chown -R "$app:www-data" "$install_dir"
 
 dashboard_domain=$(ynh_app_setting_get --key=dashboard_domain)
 
 ynh_script_progression "Restoring system configurations..."
-ynh_restore --src_path="/etc/nginx/conf.d/$domain.d/$app.conf"
-ynh_restore --src_path="/etc/nginx/conf.d/${dashboard_domain}.d/${app}-dashboard.conf" || true
-ynh_restore --src_path="/etc/php/$phpversion/fpm/pool.d/$app.conf" || true
-ynh_restore --src_path="/etc/systemd/system/$app.service" || true
+ynh_restore "/etc/nginx/conf.d/$domain.d/$app.conf"
+
+if [[ -n "$dashboard_domain" ]]; then
+  mkdir -p "/etc/nginx/conf.d/${dashboard_domain}.d"
+  ynh_restore "/etc/nginx/conf.d/${dashboard_domain}.d/${app}-dashboard.conf" || true
+fi
+
+ynh_restore "/etc/php/${php_version}/fpm/pool.d/$app.conf" || true
+ynh_restore "/etc/systemd/system/$app.service" || true
 
 yunohost service add "$app" --description="WNDRS Besucher-Analyse Dashboard" --log="/var/log/$app/$app.log"
+systemctl enable "$app.service" --quiet || true
 
 chown -R "$app:www-data" "$install_dir"
-systemctl enable "$app" --quiet
+chmod 770 "$install_dir/www/os/data" "$install_dir/www/os/uploads" "$install_dir/www/os/data/analytics" 2>/dev/null || true
+chmod 700 "$install_dir/dashboard/data" 2>/dev/null || true
+
 ynh_systemctl --service="$app" --action="start" || true
+ynh_systemctl --service="php${php_version}-fpm" --action="reload" || true
 ynh_systemctl --service="nginx" --action="reload"
-ynh_systemctl --service="php$phpversion-fpm" --action="reload" || true
 
 ynh_script_progression "Restoration completed"
