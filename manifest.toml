@@ -8,7 +8,7 @@ description.en = "WNDRS collective site: public landing, member OS, and visitor 
 description.de = "WNDRS-Kollektiv-Website: Landing, Mitglieder-OS und Besucheranalyse"
 description.fr = "Site du collectif WNDRS : landing, OS membres et analyse de fréquentation"
 
-version = "0.1.0~ynh1"
+version = "0.1.1~ynh1"
 
 maintainers = ["mrmikosu"]
 
@@ -91,15 +91,17 @@ ram.runtime = "200M"
     main.default = 8099
 
     [resources.apt]
+    # Versioned PHP packages so apt actually installs phpX.Y-fpm (systemd unit).
+    # Unversioned php-fpm can leave $php_version=8.2 while the unit is missing.
     packages = [
-        "php-fpm",
-        "php-cli",
-        "php-sqlite3",
-        "php-mbstring",
-        "php-curl",
-        "php-xml",
-        "php-gd",
-        "php-zip",
+        "php8.2-fpm",
+        "php8.2-cli",
+        "php8.2-sqlite3",
+        "php8.2-mbstring",
+        "php8.2-curl",
+        "php8.2-xml",
+        "php8.2-gd",
+        "php8.2-zip",
         "python3",
         "python3-venv",
         "python3-pip",
