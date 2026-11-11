@@ -21,6 +21,12 @@
 
 `yunohost app upgrade wndrs` replaces code but keeps `www/os/data/`, `www/os/config.php`, and `dashboard/data/`.
 
+On every upgrade the package also:
+- re-applies dashboard `visitors` + `auth_header=false` and regenerates SSOwat
+- rewrites `DASH_PUBLIC_HOST` / nginx `X-Forwarded-Host`
+- syncs landing `data-k` from `www/os/data/analytics/config.php`
+- idempotently runs `manage.py ensure-site` so export secrets stay aligned
+
 ## Cron
 
 Point a system cron or Yunohost job at:

@@ -8,6 +8,7 @@ User=__APP__
 Group=__APP__
 WorkingDirectory=__INSTALL_DIR__/dashboard
 Environment=DASH_IMPORT_MIN=15
+Environment=DASH_PUBLIC_HOST=__DASHBOARD_DOMAIN__
 ExecStart=__INSTALL_DIR__/dashboard/.venv/bin/uvicorn app:app --host 127.0.0.1 --port __PORT__
 Restart=on-failure
 RestartSec=3

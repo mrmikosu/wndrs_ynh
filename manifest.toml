@@ -8,7 +8,7 @@ description.en = "WNDRS collective site: public landing, member OS, and visitor 
 description.de = "WNDRS-Kollektiv-Website: Landing, Mitglieder-OS und Besucheranalyse"
 description.fr = "Site du collectif WNDRS : landing, OS membres et analyse de fréquentation"
 
-version = "0.1.8~ynh1"
+version = "0.1.10~ynh1"
 
 maintainers = ["mrmikosu"]
 
@@ -68,8 +68,8 @@ ram.runtime = "200M"
     [resources.sources.main]
     # Keep in sync with GitHub release mrmikosu/wndrs_ynh@ynh-0.1.0
     # Local ZIP installs still ship sources/app.tar.gz; install prefers that file.
-    url = "https://github.com/mrmikosu/wndrs_ynh/releases/download/ynh-0.1.7/wndrs-app-sources.tar.gz"
-    sha256 = "18ed90f3a864bb21df8fe2253582da31856833cc6177d292288f6b398055cbf9"
+    url = "https://github.com/mrmikosu/wndrs_ynh/releases/download/ynh-0.1.10/wndrs-app-sources.tar.gz"
+    sha256 = "c7ff40f7f764d50d419ff53e069d0140cdfda6530a1e8e827aeb35abb85f22a8"
     format = "tar.gz"
     in_subdir = false
 
@@ -85,7 +85,9 @@ ram.runtime = "200M"
     # Dashboard vhost is bound in install script to dashboard_domain
     dashboard.auth_header = false
     dashboard.show_tile = false
-    dashboard.protected = true
+    # Must stay false so admins can grant "visitors" (no Yunohost SSO in front of Python login)
+    dashboard.protected = false
+    dashboard.allowed = "visitors"
 
     [resources.ports]
     main.default = 8099

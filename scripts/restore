@@ -23,6 +23,12 @@ ynh_restore "/etc/systemd/system/$app.service" || true
 yunohost service add "$app" --description="WNDRS Besucher-Analyse Dashboard" --log="/var/log/$app/$app.log"
 systemctl enable "$app.service" --quiet || true
 
+wndrs_sync_seo_host "$install_dir" "$domain"
+wndrs_rewrite_vite_base "$install_dir" "$path"
+wndrs_sync_landing_tracker "$install_dir" "$path"
+wndrs_ensure_dashboard_public "$dashboard_domain" "$app"
+wndrs_ensure_dashboard_site "$install_dir" "$domain" "$path"
+
 chown -R "$app:www-data" "$install_dir"
 chmod 770 "$install_dir/www/os/data" "$install_dir/www/os/uploads" "$install_dir/www/os/data/analytics" 2>/dev/null || true
 chmod 700 "$install_dir/dashboard/data" 2>/dev/null || true

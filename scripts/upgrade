@@ -31,6 +31,19 @@ mkdir -p "$install_dir/www/os" "$install_dir/dashboard"
 [[ -d "$tmpdir/dashboard-data" ]] && rm -rf "$install_dir/dashboard/data" && mv "$tmpdir/dashboard-data" "$install_dir/dashboard/data"
 rm -rf "$tmpdir"
 
+# Landing from tarball may have stale data-k / /site/ paths — sync to live collector config
+landing="$install_dir/www/index.html"
+if [[ -f "$landing" && "$path" != "/site" ]]; then
+  if [[ "$path" == "/" ]]; then
+    ynh_replace --match="/site/" --replace="/" --file="$landing" || true
+  else
+    ynh_replace --match="/site/" --replace="${path%/}/" --file="$landing" || true
+  fi
+fi
+wndrs_sync_seo_host "$install_dir" "$domain"
+wndrs_rewrite_vite_base "$install_dir" "$path"
+wndrs_sync_landing_tracker "$install_dir" "$path"
+
 ynh_script_progression "Updating Python dependencies..."
 python3 -m venv "$install_dir/dashboard/.venv"
 "$install_dir/dashboard/.venv/bin/pip" install --upgrade pip
@@ -41,14 +54,28 @@ ynh_config_add_phpfpm
 ynh_config_add_nginx
 mkdir -p "/etc/nginx/conf.d/${dashboard_domain}.d"
 ynh_config_add --template="nginx-dashboard.conf" --destination="/etc/nginx/conf.d/${dashboard_domain}.d/${app}-dashboard.conf"
+yunohost tools regen-conf nginx --force || true
+ynh_systemctl --service=nginx --action=reload || true
 ynh_config_add_systemd
 yunohost service add "$app" --description="WNDRS Besucher-Analyse Dashboard" --log="/var/log/$app/$app.log"
+
+wndrs_ensure_dashboard_public "$dashboard_domain" "$app"
 
 chown -R "$app:www-data" "$install_dir"
 chmod 770 "$install_dir/www/os/data" "$install_dir/www/os/uploads" "$install_dir/www/os/data/analytics" 2>/dev/null || true
 chmod 700 "$install_dir/dashboard/data"
 
+# Keep Python site secrets aligned with PHP collector (idempotent)
+wndrs_ensure_dashboard_site "$install_dir" "$domain" "$path"
+
+# Keep python_url pointing at dashboard
+dbfile="$install_dir/www/os/data/kollektiv.sqlite"
+if [[ -f "$dbfile" && -n "$dashboard_domain" ]]; then
+  sqlite3 "$dbfile" "INSERT OR REPLACE INTO app_settings (key, value, updated_at) VALUES ('analytics.python_url','https://${dashboard_domain}',datetime('now'));" || true
+fi
+
 ynh_script_progression "Starting $app's systemd service..."
-ynh_systemctl --service="$app" --action="start" || true
+ynh_systemctl --service="$app" --action="start" --wait_until="Uvicorn running" --log_path="systemd" --timeout=60 || \
+  ynh_systemctl --service="$app" --action="restart" || true
 
 ynh_script_progression "Upgrade of $app completed"

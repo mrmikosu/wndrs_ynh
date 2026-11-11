@@ -67,19 +67,13 @@ chmod 640 "$install_dir/www/os/config.php"
 ynh_config_add --template="analytics-config.php.tpl" --destination="$install_dir/www/os/data/analytics/config.php"
 chmod 640 "$install_dir/www/os/data/analytics/config.php"
 
-# Patch landing: path prefix + tracker
+# Patch landing asset base if install path is not the Vite default /site/
 landing="$install_dir/www/index.html"
-if [[ -f "$landing" ]]; then
-  # Rewrite default /site/ asset base if custom path
-  if [[ "$path" != "/site" ]]; then
-    ynh_replace --match="/site/" --replace="${path%/}/" --file="$landing"
-  fi
-  # Ensure tracker points at OS collector with generated key
-  if grep -q 'os/a/t.js' "$landing"; then
-    sed -i -E "s#src=\"[^\"]*os/a/t\\.js\"#src=\"${path%/}/os/a/t.js\"#g" "$landing"
-    sed -i -E "s#data-k=\"[^\"]*\"#data-k=\"${site_key}\"#g" "$landing"
+if [[ -f "$landing" && "$path" != "/site" ]]; then
+  if [[ "$path" == "/" ]]; then
+    ynh_replace --match="/site/" --replace="/" --file="$landing"
   else
-    sed -i "s#</body>#    <script defer src=\"${path%/}/os/a/t.js\" data-k=\"${site_key}\"></script>\n  </body>#" "$landing"
+    ynh_replace --match="/site/" --replace="${path%/}/" --file="$landing"
   fi
 fi
 
@@ -87,6 +81,10 @@ fi
 ynh_app_setting_set --key=site_key --value="$site_key"
 ynh_app_setting_set --key=python_url --value="https://${dashboard_domain}"
 
+# SEO absolute URLs + tracker + Vite asset base must match this install's domain/path
+wndrs_sync_seo_host "$install_dir" "$domain"
+wndrs_rewrite_vite_base "$install_dir" "$path"
+wndrs_sync_landing_tracker "$install_dir" "$path"
 #=================================================
 # PYTHON DASHBOARD VENV + ADMIN
 #=================================================
@@ -140,11 +138,8 @@ ynh_systemctl --service=nginx --action=reload
 ynh_config_add_systemd
 yunohost service add "$app" --description="WNDRS Besucher-Analyse Dashboard" --log="/var/log/$app/$app.log"
 
-# Bind dashboard permission to dashboard domain.
-# URL format: domain.tld/ — NOT https://… (that becomes domain "https:").
-# Allow visitors: dashboard has its own login+TOTP; do not put Yunohost SSO in front.
-ynh_permission_url --permission="dashboard" --url="${dashboard_domain}/" --auth_header=false
-ynh_permission_update --permission="dashboard" --add="visitors" || true
+# Bind dashboard permission to dashboard domain (no Yunohost SSO — own login+TOTP).
+wndrs_ensure_dashboard_public "$dashboard_domain" "$app"
 
 chown -R "$app:www-data" "$install_dir"
 chmod -R u+rwX,g+rX,o= "$install_dir"
@@ -175,6 +170,9 @@ if [[ -f "$dbfile" ]]; then
   sqlite3 "$dbfile" "INSERT OR REPLACE INTO app_settings (key, value, updated_at) VALUES ('analytics.active_site_id','1',datetime('now'));" || true
 fi
 
+# Python dashboard site mirrors PHP collector secrets (no manual /admin/sites step)
+wndrs_ensure_dashboard_site "$install_dir" "$domain" "$path"
+
 #=================================================
 # START SERVICES
 #=================================================
@@ -186,3 +184,4 @@ ynh_systemctl --service="$app" --action="start" --wait_until="Uvicorn running" -
 ynh_script_progression "Installation of $app completed"
 ynh_print_info "Dashboard TOTP secret is in $totp_file (mode 600). Add it to your authenticator, then delete the file."
 ynh_print_info "Landing: https://${domain}${path%/}/ — OS: https://${domain}${path%/}/os/ — Dashboard: https://${dashboard_domain}/"
+ynh_print_info "Export endpoint (pre-seeded): https://${domain}${path%/}/os/a/x.php"
