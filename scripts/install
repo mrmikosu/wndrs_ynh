@@ -125,17 +125,20 @@ ynh_script_progression "Adding system configurations..."
 ynh_config_add_phpfpm
 ynh_config_add_nginx
 
-# Dashboard nginx fragment on dedicated domain
+# Dashboard nginx fragment on dedicated domain (must already exist in Yunohost + DNS).
 mkdir -p "/etc/nginx/conf.d/${dashboard_domain}.d"
 ynh_config_add --template="nginx-dashboard.conf" --destination="/etc/nginx/conf.d/${dashboard_domain}.d/${app}-dashboard.conf"
+# Main nginx helper already reloaded earlier — reload again so this fragment is live.
+ynh_systemctl --service=nginx --action=reload
 
 ynh_config_add_systemd
 yunohost service add "$app" --description="WNDRS Besucher-Analyse Dashboard" --log="/var/log/$app/$app.log"
 
-# Bind dashboard permission to dashboard domain (admins only).
-# Format must be domain.tld/path — NOT https://… (that becomes domain "https:").
-ynh_permission_url --permission="dashboard" --url="${dashboard_domain}/"
-ynh_permission_update --permission="dashboard" --add="admins" --remove="visitors" || true
+# Bind dashboard permission to dashboard domain.
+# URL format: domain.tld/ — NOT https://… (that becomes domain "https:").
+# Allow visitors: dashboard has its own login+TOTP; do not put Yunohost SSO in front.
+ynh_permission_url --permission="dashboard" --url="${dashboard_domain}/" --auth_header=false
+ynh_permission_update --permission="dashboard" --add="visitors" || true
 
 chown -R "$app:www-data" "$install_dir"
 chmod -R u+rwX,g+rX,o= "$install_dir"
@@ -170,8 +173,9 @@ fi
 # START SERVICES
 #=================================================
 ynh_script_progression "Starting services..."
-ynh_systemctl --service="$app" --action="start" --wait_until="Uvicorn running" --log_path="systemd" --timeout=30 || \
-  ynh_systemctl --service="$app" --action="restart" || true
+ynh_systemctl --service="$app" --action="enable"
+ynh_systemctl --service="$app" --action="start" --wait_until="Uvicorn running" --log_path="systemd" --timeout=60 || \
+  ynh_systemctl --service="$app" --action="restart" --wait_until="Uvicorn running" --log_path="systemd" --timeout=60
 
 ynh_script_progression "Installation of $app completed"
 ynh_print_info "Dashboard TOTP secret is in $totp_file (mode 600). Add it to your authenticator, then delete the file."
