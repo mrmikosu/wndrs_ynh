@@ -126,9 +126,15 @@ ynh_config_add_phpfpm
 ynh_config_add_nginx
 
 # Dashboard nginx fragment on dedicated domain (must already exist in Yunohost + DNS).
+if [[ "$dashboard_domain" == "$domain" ]]; then
+  ynh_print_warn "dashboard_domain equals site domain — use a dedicated subdomain (e.g. stats.$domain)."
+fi
 mkdir -p "/etc/nginx/conf.d/${dashboard_domain}.d"
+# Drop any stock Debian default site that would show "Welcome to nginx"
+rm -f /etc/nginx/sites-enabled/default 2>/dev/null || true
 ynh_config_add --template="nginx-dashboard.conf" --destination="/etc/nginx/conf.d/${dashboard_domain}.d/${app}-dashboard.conf"
-# Main nginx helper already reloaded earlier — reload again so this fragment is live.
+# Regen so the domain vhost definitely includes *.d fragments, then reload.
+yunohost tools regen-conf nginx --force || true
 ynh_systemctl --service=nginx --action=reload
 
 ynh_config_add_systemd
