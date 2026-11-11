@@ -132,8 +132,9 @@ ynh_config_add --template="nginx-dashboard.conf" --destination="/etc/nginx/conf.
 ynh_config_add_systemd
 yunohost service add "$app" --description="WNDRS Besucher-Analyse Dashboard" --log="/var/log/$app/$app.log"
 
-# Bind dashboard permission to dashboard domain (admins only)
-ynh_permission_url --permission="dashboard" --url="https://${dashboard_domain}/" --add_url="https://${dashboard_domain}/"
+# Bind dashboard permission to dashboard domain (admins only).
+# Format must be domain.tld/path — NOT https://… (that becomes domain "https:").
+ynh_permission_url --permission="dashboard" --url="${dashboard_domain}/"
 ynh_permission_update --permission="dashboard" --add="admins" --remove="visitors" || true
 
 chown -R "$app:www-data" "$install_dir"

@@ -8,7 +8,7 @@ description.en = "WNDRS collective site: public landing, member OS, and visitor 
 description.de = "WNDRS-Kollektiv-Website: Landing, Mitglieder-OS und Besucheranalyse"
 description.fr = "Site du collectif WNDRS : landing, OS membres et analyse de fréquentation"
 
-version = "0.1.1~ynh1"
+version = "0.1.2~ynh1"
 
 maintainers = ["mrmikosu"]
 
