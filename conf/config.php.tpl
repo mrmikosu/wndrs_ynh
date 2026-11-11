@@ -1,7 +1,8 @@
 <?php
 declare(strict_types=1);
 
-$root = __DIR__;
+// Absolute path: ynh templates collide with PHP magic constants named like DIR/FILE.
+$root = '__INSTALL_DIR__/www/os';
 
 return [
     'app_name' => 'WNDRS Kollektiv OS',
