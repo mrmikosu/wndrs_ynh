@@ -2,9 +2,9 @@
 
 1. Open the landing at `https://DOMAIN/PATH/` and the OS at `https://DOMAIN/PATH/os/`.
 2. Log into the PHP OS with the admin email/password you set at install.
-3. Open the Python dashboard at `https://DASHBOARD_DOMAIN/`. The domain must exist in Yunohost **and** have a working DNS A/AAAA record (and ideally a Let's Encrypt cert). Use the dashboard admin username and the **same password** as the PHP admin. Import the TOTP secret from `dashboard/data/admin-totp.txt` on the server, then **delete that file**.
+3. In PHP admin **Besucher** (`/admin/analytics`) scan the **2FA QR** (or copy the secret) into your authenticator app. Then open `https://DASHBOARD_DOMAIN/` — username = dashboard admin from install, password = PHP admin password, plus TOTP. After that, click **2FA eingerichtet — ausblenden** (and optionally delete `dashboard/data/admin-totp.txt` on the server).
 
-   If the page stays empty/unreachable, on the server check:
+   If the dashboard page stays empty/unreachable, on the server check:
 
    ```bash
    sudo yunohost app setting wndrs dashboard_domain
