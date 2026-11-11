@@ -66,9 +66,9 @@ ram.runtime = "200M"
 
 [resources]
     [resources.sources.main]
-    # Replaced by yunohost/build-sources.sh for ZIP installs (local file).
-    # For Git installs, publish this asset on a GitHub release and update sha256.
-    url = "https://github.com/mrmikosu/wndrser/releases/download/ynh-0.1.0/wndrs-app-sources.tar.gz"
+    # Keep in sync with GitHub release mrmikosu/wndrs_ynh@ynh-0.1.0
+    # Local ZIP installs still ship sources/app.tar.gz; install prefers that file.
+    url = "https://github.com/mrmikosu/wndrs_ynh/releases/download/ynh-0.1.0/wndrs-app-sources.tar.gz"
     sha256 = "d088cb492e3feff5d2bdc7349d66e5b78c6d2d4235761ad1ae6698405aa3268b"
     format = "tar.gz"
     in_subdir = false
