@@ -8,7 +8,7 @@ description.en = "WNDRS collective site: public landing, member OS, and visitor 
 description.de = "WNDRS-Kollektiv-Website: Landing, Mitglieder-OS und Besucheranalyse"
 description.fr = "Site du collectif WNDRS : landing, OS membres et analyse de fréquentation"
 
-version = "0.1.10~ynh1"
+version = "0.1.11~ynh1"
 
 maintainers = ["mrmikosu"]
 
@@ -66,10 +66,10 @@ ram.runtime = "200M"
 
 [resources]
     [resources.sources.main]
-    # Keep in sync with GitHub release mrmikosu/wndrs_ynh@ynh-0.1.0
+    # Keep in sync with GitHub release mrmikosu/wndrs_ynh@ynh-0.1.11
     # Local ZIP installs still ship sources/app.tar.gz; install prefers that file.
-    url = "https://github.com/mrmikosu/wndrs_ynh/releases/download/ynh-0.1.10/wndrs-app-sources.tar.gz"
-    sha256 = "c7ff40f7f764d50d419ff53e069d0140cdfda6530a1e8e827aeb35abb85f22a8"
+    url = "https://github.com/mrmikosu/wndrs_ynh/releases/download/ynh-0.1.11/wndrs-app-sources.tar.gz"
+    sha256 = "11153bc3442cb5a28161a26df6d32e8a507d9bc6ec1106d6528881ff08dece2f"
     format = "tar.gz"
     in_subdir = false
 
