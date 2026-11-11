@@ -1,0 +1,54 @@
+#!/bin/bash
+
+source _common.sh
+source /usr/share/yunohost/helpers
+
+dashboard_domain=$(ynh_app_setting_get --key=dashboard_domain)
+
+ynh_script_progression "Stopping $app's systemd service..."
+ynh_systemctl --service="$app" --action="stop" || true
+
+# Keep persistent data aside
+ynh_script_progression "Backing up persistent data..."
+tmpdir="$(mktemp -d)"
+[[ -d "$install_dir/www/os/data" ]] && cp -a "$install_dir/www/os/data" "$tmpdir/data"
+[[ -f "$install_dir/www/os/config.php" ]] && cp -a "$install_dir/www/os/config.php" "$tmpdir/config.php"
+[[ -d "$install_dir/dashboard/data" ]] && cp -a "$install_dir/dashboard/data" "$tmpdir/dashboard-data"
+
+ynh_script_progression "Upgrading source files..."
+if [[ -f "../sources/app.tar.gz" ]]; then
+  # Clear code dirs but keep structure
+  rm -rf "$install_dir/www" "$install_dir/dashboard"
+  tar -xzf "../sources/app.tar.gz" -C "$install_dir"
+else
+  ynh_setup_source --dest_dir="$install_dir" --full_replace
+fi
+
+# Restore persistent data
+mkdir -p "$install_dir/www/os" "$install_dir/dashboard"
+[[ -d "$tmpdir/data" ]] && rm -rf "$install_dir/www/os/data" && mv "$tmpdir/data" "$install_dir/www/os/data"
+[[ -f "$tmpdir/config.php" ]] && mv "$tmpdir/config.php" "$install_dir/www/os/config.php"
+[[ -d "$tmpdir/dashboard-data" ]] && rm -rf "$install_dir/dashboard/data" && mv "$tmpdir/dashboard-data" "$install_dir/dashboard/data"
+rm -rf "$tmpdir"
+
+ynh_script_progression "Updating Python dependencies..."
+python3 -m venv "$install_dir/dashboard/.venv"
+"$install_dir/dashboard/.venv/bin/pip" install --upgrade pip
+"$install_dir/dashboard/.venv/bin/pip" install -r "$install_dir/dashboard/requirements.txt"
+
+ynh_script_progression "Updating system configurations..."
+ynh_config_add_phpfpm
+ynh_config_add_nginx
+mkdir -p "/etc/nginx/conf.d/${dashboard_domain}.d"
+ynh_config_add --template="nginx-dashboard.conf" --destination="/etc/nginx/conf.d/${dashboard_domain}.d/${app}-dashboard.conf"
+ynh_config_add_systemd
+yunohost service add "$app" --description="WNDRS Besucher-Analyse Dashboard" --log="/var/log/$app/$app.log"
+
+chown -R "$app:www-data" "$install_dir"
+chmod 770 "$install_dir/www/os/data" "$install_dir/www/os/uploads" "$install_dir/www/os/data/analytics" 2>/dev/null || true
+chmod 700 "$install_dir/dashboard/data"
+
+ynh_script_progression "Starting $app's systemd service..."
+ynh_systemctl --service="$app" --action="start" || true
+
+ynh_script_progression "Upgrade of $app completed"

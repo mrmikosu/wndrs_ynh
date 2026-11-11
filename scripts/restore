@@ -1,0 +1,25 @@
+#!/bin/bash
+
+source ../settings/scripts/_common.sh 2>/dev/null || source _common.sh
+source /usr/share/yunohost/helpers
+
+ynh_script_progression "Restoring the app directory..."
+ynh_restore_everything
+
+dashboard_domain=$(ynh_app_setting_get --key=dashboard_domain)
+
+ynh_script_progression "Restoring system configurations..."
+ynh_restore --src_path="/etc/nginx/conf.d/$domain.d/$app.conf"
+ynh_restore --src_path="/etc/nginx/conf.d/${dashboard_domain}.d/${app}-dashboard.conf" || true
+ynh_restore --src_path="/etc/php/$phpversion/fpm/pool.d/$app.conf" || true
+ynh_restore --src_path="/etc/systemd/system/$app.service" || true
+
+yunohost service add "$app" --description="WNDRS Besucher-Analyse Dashboard" --log="/var/log/$app/$app.log"
+
+chown -R "$app:www-data" "$install_dir"
+systemctl enable "$app" --quiet
+ynh_systemctl --service="$app" --action="start" || true
+ynh_systemctl --service="nginx" --action="reload"
+ynh_systemctl --service="php$phpversion-fpm" --action="reload" || true
+
+ynh_script_progression "Restoration completed"

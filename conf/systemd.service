@@ -1,0 +1,18 @@
+[Unit]
+Description=WNDRS Besucher-Analyse Dashboard (__APP__)
+After=network.target
+
+[Service]
+Type=simple
+User=__APP__
+Group=__APP__
+WorkingDirectory=__INSTALL_DIR__/dashboard
+Environment=DASH_IMPORT_MIN=15
+ExecStart=__INSTALL_DIR__/dashboard/.venv/bin/uvicorn app:app --host 127.0.0.1 --port __PORT__
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

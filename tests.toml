@@ -1,0 +1,5 @@
+test_format = 1
+
+[default]
+    # Basic packaging test — full install requires a built sources tarball.
+    exclude = []

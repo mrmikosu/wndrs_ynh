@@ -1,0 +1,14 @@
+#!/bin/bash
+
+source ../settings/scripts/_common.sh 2>/dev/null || source _common.sh
+source /usr/share/yunohost/helpers
+
+ynh_print_info "Declaring files to be backed up..."
+
+ynh_backup --src_path="$install_dir"
+ynh_backup --src_path="/etc/nginx/conf.d/$domain.d/$app.conf"
+dashboard_domain=$(ynh_app_setting_get --key=dashboard_domain)
+ynh_backup --src_path="/etc/nginx/conf.d/${dashboard_domain}.d/${app}-dashboard.conf" || true
+
+ynh_backup --src_path="/etc/php/$phpversion/fpm/pool.d/$app.conf" || true
+ynh_backup --src_path="/etc/systemd/system/$app.service" || true

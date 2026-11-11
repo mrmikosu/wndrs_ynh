@@ -1,0 +1,1 @@
+WNDRS KLLKTV packs the public collective website: a Vite landing page, the PHP member/admin OS (flattened), the privacy-first visitor analytics collector, and an optional Python analytics dashboard behind its own domain.

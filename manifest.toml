@@ -1,0 +1,107 @@
+#:schema https://raw.githubusercontent.com/YunoHost/apps/main/schemas/manifest.v2.schema.json
+
+packaging_format = 2
+
+id = "wndrs"
+name = "WNDRS KLLKTV"
+description.en = "WNDRS collective site: public landing, member OS, and visitor analytics"
+description.de = "WNDRS-Kollektiv-Website: Landing, Mitglieder-OS und Besucheranalyse"
+description.fr = "Site du collectif WNDRS : landing, OS membres et analyse de fréquentation"
+
+version = "0.1.0~ynh1"
+
+maintainers = ["mrmikosu"]
+
+[upstream]
+license = "AGPL-3.0-or-later"
+website = "https://wndrs.de"
+code = "https://github.com/mrmikosu/wndrser"
+
+[integration]
+yunohost = ">= 12.1.17"
+helpers_version = "2.1"
+architectures = "all"
+multi_instance = false
+ldap = false
+sso = false
+disk = "250M"
+ram.build = "300M"
+ram.runtime = "200M"
+
+[install]
+    [install.domain]
+    type = "domain"
+
+    [install.path]
+    type = "path"
+    default = "/site"
+
+    [install.dashboard_domain]
+    ask.en = "Domain for the Python analytics dashboard (HTTPS)"
+    ask.de = "Domain für das Python-Besucher-Dashboard (HTTPS)"
+    ask.fr = "Domaine du tableau de bord Python (HTTPS)"
+    type = "domain"
+
+    [install.init_main_permission]
+    type = "group"
+    default = "visitors"
+
+    [install.admin_email]
+    ask.en = "Email for the initial PHP OS admin"
+    ask.de = "E-Mail für den ersten PHP-OS-Admin"
+    ask.fr = "E-mail de l'admin PHP initial"
+    type = "email"
+
+    [install.password]
+    type = "password"
+    help.en = "Password for the PHP OS admin (and used to seed the dashboard admin if needed)."
+    help.de = "Passwort für den PHP-OS-Admin (ggf. auch Dashboard-Seed)."
+
+    [install.dashboard_admin]
+    ask.en = "Username for the Python dashboard admin"
+    ask.de = "Benutzername für das Python-Dashboard"
+    ask.fr = "Nom d'utilisateur du dashboard Python"
+    type = "string"
+    default = "admin"
+
+[resources]
+    [resources.sources.main]
+    # Replaced by yunohost/build-sources.sh for ZIP installs (local file).
+    # For Git installs, publish this asset on a GitHub release and update sha256.
+    url = "https://github.com/mrmikosu/wndrser/releases/download/ynh-0.1.0/wndrs-app-sources.tar.gz"
+    sha256 = "d088cb492e3feff5d2bdc7349d66e5b78c6d2d4235761ad1ae6698405aa3268b"
+    format = "tar.gz"
+    in_subdir = false
+
+    [resources.system_user]
+
+    [resources.install_dir]
+    group = "www-data:r-x"
+
+    [resources.data_dir]
+
+    [resources.permissions]
+    main.url = "/"
+    # Dashboard vhost is bound in install script to dashboard_domain
+    dashboard.auth_header = false
+    dashboard.show_tile = false
+    dashboard.protected = true
+
+    [resources.ports]
+    main.default = 8099
+
+    [resources.apt]
+    packages = [
+        "php-fpm",
+        "php-cli",
+        "php-sqlite3",
+        "php-mbstring",
+        "php-curl",
+        "php-xml",
+        "php-gd",
+        "php-zip",
+        "python3",
+        "python3-venv",
+        "python3-pip",
+        "sqlite3",
+    ]

@@ -1,0 +1,8 @@
+                    GNU AFFERO GENERAL PUBLIC LICENSE
+                       Version 3, 19 November 2007
+
+This Yunohost packaging (scripts, conf, docs under yunohost/wndrs_ynh/) is
+licensed under the GNU Affero General Public License v3.0 or later.
+
+The upstream WNDRS application code shipped inside sources/app.tar.gz remains
+under its own project license terms as found in the wndrser monorepo.

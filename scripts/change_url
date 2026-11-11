@@ -1,0 +1,32 @@
+#!/bin/bash
+
+source _common.sh
+source /usr/share/yunohost/helpers
+
+ynh_script_progression "Updating nginx configuration..."
+ynh_config_change_url_nginx
+
+# Rewrite PHP base_path / public_home / upload_url
+config="$install_dir/www/os/config.php"
+if [[ -f "$config" ]]; then
+  new_base="${path%/}/os"
+  new_home="${path%/}/"
+  ynh_replace --match="'base_path' => '.*'" --replace="'base_path' => '${new_base}'" --file="$config" || true
+  ynh_replace --match="'public_home' => '.*'" --replace="'public_home' => '${new_home}'" --file="$config" || true
+fi
+
+landing="$install_dir/www/index.html"
+site_key=$(ynh_app_setting_get --key=site_key)
+if [[ -f "$landing" && -n "$site_key" ]]; then
+  sed -i -E "s#src=\"[^\"]*os/a/t\\.js\"#src=\"${path%/}/os/a/t.js\"#g" "$landing"
+  sed -i -E "s#data-k=\"[^\"]*\"#data-k=\"${site_key}\"#g" "$landing"
+fi
+
+# Refresh analytics origins for new domain
+aconf="$install_dir/www/os/data/analytics/config.php"
+if [[ -f "$aconf" ]]; then
+  # Leave secret/site_key; admin can adjust origins in overrides
+  ynh_print_info "Update analytics origins if the public domain changed (overrides.php or config)."
+fi
+
+ynh_script_progression "change_url completed"
